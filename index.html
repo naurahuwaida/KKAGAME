@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport settings untuk Mobile: Mencegah zoom otomatis dan menyesuaikan lebar layar -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KKA GAME: Misi Komputasional</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Lilita One (Font Ramah Anak/Game) -->
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #2b2d42;
+            overflow-x: hidden;
+            /* Pattern Background */
+            background-image: radial-gradient(#3d405b 15%, transparent 16%), radial-gradient(#3d405b 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            /* Optimasi Touch di HP */
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1, h2, h3, .game-font {
+            font-family: 'Lilita One', cursive;
+            letter-spacing: 1px;
+        }
+
+        /* 3D Button Style */
+        .btn-3d {
+            transition: all 0.1s;
+            position: relative;
+            top: 0;
+            border: none;
+            outline: none;
+            user-select: none;
+        }
+        .btn-3d:active {
+            top: 4px;
+            box-shadow: 0 0 0 0 !important;
+        }
+
+        /* 3D Card Container */
+        .card-3d {
+            background: white;
+            border-radius: 20px;
+            border-bottom: 8px solid #e5e7eb;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Utility Colors for 3D buttons */
+        .btn-green { background: #4ade80; box-shadow: 0 4px 0 #16a34a; color: white; }
+        .btn-blue { background: #60a5fa; box-shadow: 0 4px 0 #2563eb; color: white; }
+        .btn-red { background: #f87171; box-shadow: 0 4px 0 #dc2626; color: white; }
+        .btn-yellow { background: #facc15; box-shadow: 0 4px 0 #ca8a04; color: #713f12; }
+        .btn-purple { background: #c084fc; box-shadow: 0 4px 0 #9333ea; color: white; }
+        .btn-gray { background: #9ca3af; box-shadow: 0 4px 0 #4b5563; color: white; }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating { animation: float 3s ease-in-out infinite; }
+
+        .hidden-screen { display: none !important; }
+
+        /* Game Specific Styles */
+        .grid-cell {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+        .robot { font-size: 1.5rem; transition: all 0.3s; }
+        @media (min-width: 768px) {
+            .robot { font-size: 2rem; }
+        }
+        
+        /* Magma Effect */
+        .magma-bg {
+            background: repeating-linear-gradient(
+                45deg,
+                #ef4444,
+                #ef4444 10px,
+                #dc2626 10px,
+                #dc2626 20px
+            );
+        }
+        
+        /* Home Button Style - Mobile Optimized */
+        .home-btn {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            z-index: 50;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Score Display Style - Mobile Optimized */
+        #score-hud {
+            position: fixed;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            color: #4f46e5;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e0e7ff;
+            display: none; /* Hidden by default */
+            font-family: 'Lilita One', cursive;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        @media (min-width: 768px) {
+            #score-hud { padding: 0.5rem 1.5rem; font-size: 1.25rem; top: 1rem; right: 1rem; }
+            .home-btn { padding: 8px 12px; font-size: 0.9rem; top: 1rem; left: 1rem; }
+        }
+
+        /* Input Style */
+        .player-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .player-input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 md:p-4 bg-[#2b2d42]">
+
+    <!-- SCORE HUD -->
+    <div id="score-hud">
+        👤 <span id="hud-name" class="mr-1 text-indigo-800 truncate max-w-[60px] md:max-w-[100px] inline-block align-bottom">Player</span>
+        🏆 <span id="score-val">0</span>
+    </div>
+
+    <!-- MAIN GAME CONTAINER -->
+    <div id="game-container" class="w-full max-w-4xl relative">
+        
+        <!-- === SCENE 1: OPENING (MENU PILIH GAME) === -->
+        <div id="scene-opening" class="card-3d p-6 md:p-8 text-center bg-gradient-to-b from-blue-50 to-white min-h-[85vh] md:min-h-[600px] flex flex-col justify-center items-center">
+            <div class="floating mb-4">
+                <i class="ph-fill ph-brain text-7xl md:text-8xl text-indigo-500 drop-shadow-lg"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl text-gray-800 mb-2 text-shadow-sm">KKA GAME</h1>
+            
+            <div class="bg-indigo-100 p-3 rounded-xl mb-6 border-b-4 border-indigo-200 inline-block">
+                <p class="font-bold text-gray-700 text-xs md:text-sm">Dibuat Oleh:</p>
+                <p class="text-base md:text-lg text-indigo-700 font-bold game-font">Naura Huwaida Prasetya</p>
+                <p class="text-gray-500 text-xs">Siswi SMP</p>
+            </div>
+
+            <!-- LOGIN SECTION (TAMPIL AWAL) -->
+            <div id="login-section" class="w-full max-w-sm mb-8">
+                <p class="text-gray-500 mb-2 font-bold text-sm md:text-base">Masukkan Namamu:</p>
+                <div class="flex flex-col gap-3">
+                    <input type="text" id="player-name-input" class="player-input" placeholder="Contoh: Budi Juara" maxlength="15">
+                    <button onclick="submitName()" class="btn-3d btn-green py-3 px-6 rounded-xl text-lg md:text-xl font-bold w-full flex items-center justify-center gap-2 transform transition hover:scale-105 active:scale-95">
+                        MASUK <i class="ph-bold ph-sign-in"></i>
+                    </button>
+                </div>
+                <p id="start-hint" class="mt-4 text-red-400 text-sm font-bold hidden animate-pulse">⚠️ Isi namamu dulu ya!</p>
+            </div>
+
+            <!-- MENU SECTION (SEMBUNYI AWAL) -->
+            <div id="menu-section" class="hidden w-full flex flex-col items-center animate-fade-in pb-8">
+                <div class="mb-6 w-full text-center">
+                    <h3 class="text-lg md:text-2xl text-indigo-600 font-bold mb-4">Halo, <span id="display-player-name" class="text-indigo-800">Player</span>! 👋</h3>
+                    <button onclick="openLeaderboard()" class="btn-3d btn-yellow py-2 px-6 rounded-xl text-base md:text-lg font-bold inline-flex items-center justify-center gap-2 w-full md:w-auto">
+                        <i class="ph-fill ph-trophy"></i> LIHAT PERINGKAT
+                    </button>
+                </div>
+
+                <p class="text-gray-500 mb-4 font-bold text-sm md:text-base">Pilih Tantanganmu:</p>
+                
+                <!-- Grid: 1 kolom di HP, 2 kolom di Laptop -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl px-1" id="game-buttons-container">
+                    <button onclick="startLevel(1)" class="btn-3d btn-red py-3 px-4 rounded-xl text-base md:text-lg font-bold flex items-center justify-start gap-3 w-full text-left">
+                        <span class="bg-white/20 w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center">1</span>
+                        <div>
+                            <div class="leading-tight">Lompatan Magma</div>
+                            <div class="text-xs font-normal opacity-90">Pola (Pattern)</div>
+                        </div>
+                    </button>
+
+                    <button onclick="startLevel(2)" class="btn-3d btn-blue py-3 px-4 rounded-xl text-base md:text-lg font-bold flex items-center justify-start gap-3 w-full text-left">
+                        <span class="bg-white/20 w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center">2</span>
+                        <div>
+                            <div class="leading-tight">Bot Maze</div>
+                            <div class="text-xs font-normal opacity-90">Algoritma</div>
+                        </div>
+                    </button>
+
+                    <button onclick="startLevel(3)" class="btn-3d btn-yellow py-3 px-4 rounded-xl text-base md:text-lg font-bold flex items-center justify-start gap-3 w-full text-left text-yellow-900">
+                        <span class="bg-black/10 w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center">3</span>
+                        <div>
+                            <div class="leading-tight">Kapten Kebersihan</div>
+                            <div class="text-xs font-normal opacity-90">Dekomposisi</div>
+                        </div>
+                    </button>
+
+                    <button onclick="startLevel(4)" class="btn-3d btn-purple py-3 px-4 rounded-xl text-base md:text-lg font-bold flex items-center justify-start gap-3 w-full text-left">
+                        <span class="bg-white/20 w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center">4</span>
+                        <div>
+                            <div class="leading-tight">Sortir Data</div>
+                            <div class="text-xs font-normal opacity-90">Abstraksi</div>
+                        </div>
+                    </button>
+
+                    <button onclick="startLevel(5)" class="btn-3d btn-gray py-3 px-4 rounded-xl text-base md:text-lg font-bold flex items-center justify-start gap-3 md:col-span-2 w-full text-left bg-gray-700">
+                        <span class="bg-white/20 w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center">5</span>
+                        <div>
+                            <div class="leading-tight">Escape Room</div>
+                            <div class="text-xs font-normal opacity-90">Kriptografi</div>
+                        </div>
+                    </button>
+                </div>
+                
+                <button onclick="logout()" class="mt-6 text-gray-400 hover:text-red-500 text-sm font-bold flex items-center gap-1 transition p-4">
+                    <i class="ph-bold ph-sign-out"></i> Ganti Nama / Keluar
+                </button>
+            </div>
+        </div>
+
+        <!-- === SCENE LEADERBOARD === -->
+        <div id="scene-leaderboard" class="hidden-screen card-3d p-4 md:p-8 text-center bg-white min-h-[85vh] md:min-h-[600px] flex flex-col items-center">
+            <h2 class="text-2xl md:text-3xl text-yellow-500 mb-6 flex items-center gap-2"><i class="ph-fill ph-trophy"></i> Papan Peringkat</h2>
+            
+            <div class="w-full max-w-md bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden mb-6 flex-1 overflow-x-auto">
+                <table class="w-full text-left min-w-[300px]">
+                    <thead class="bg-indigo-600 text-white">
+                        <tr>
+                            <th class="p-3 text-center w-12">#</th>
+                            <th class="p-3">Nama Siswa</th>
+                            <th class="p-3 text-right">Skor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-list">
+                        <!-- Data injected here -->
+                        <tr><td colspan="3" class="p-4 text-center text-gray-400">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="goHome()" class="btn-3d btn-gray py-3 px-8 rounded-full font-bold w-full md:w-auto">
+                <i class="ph-bold ph-arrow-left"></i> Kembali
+            </button>
+        </div>
+
+        <!-- === SCENE 2: GAME 1 (MAGMA JUMP) === -->
+        <div id="scene-game1" class="hidden-screen card-3d overflow-hidden min-h-[85vh] md:min-h-[500px] relative flex flex-col">
+            <button onclick="goHome()" class="btn-3d btn-gray home-btn"><i class="ph-bold ph-house"></i> Home</button>
+            <div class="magma-bg h-16 md:h-24 absolute bottom-0 w-full z-10 border-t-4 border-red-800"></div>
+            
+            <div class="p-4 md:p-6 relative z-20 pt-16 flex-1 flex flex-col items-center justify-start">
+                <div class="flex justify-between items-center mb-4 w-full">
+                    <h2 class="text-lg md:text-2xl text-gray-700">Level 1: Pola</h2>
+                    <span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Pattern</span>
+                </div>
+
+                <div class="text-center w-full mt-4">
+                    <!-- Container Stones agar responsive dengan scroll -->
+                    <div class="flex justify-center gap-2 md:gap-4 mb-8 items-end h-32 md:h-40 overflow-x-auto pb-4" id="stones-container">
+                        <!-- Stones will be injected here -->
+                    </div>
+                    
+                    <div class="bg-white/90 p-4 rounded-xl border-2 border-gray-100 shadow-xl w-full max-w-lg mx-auto backdrop-blur-sm">
+                        <p class="text-base md:text-xl text-gray-600 mb-4 font-bold" id="pattern-question">Pola: +2. Angka selanjutnya?</p>
+                        <div class="flex justify-center gap-2 md:gap-4" id="pattern-options">
+                            <!-- Options injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="player-char" class="absolute left-4 bottom-20 md:bottom-28 transition-all duration-500 z-30 text-4xl md:text-5xl">
+                🏃
+            </div>
+        </div>
+
+        <!-- === SCENE 3: GAME 2 (BOT MAZE) === -->
+        <div id="scene-game2" class="hidden-screen card-3d p-4 md:p-6 min-h-[85vh] md:min-h-[500px] relative flex flex-col">
+            <button onclick="goHome()" class="btn-3d btn-gray home-btn"><i class="ph-bold ph-house"></i> Home</button>
+            <div class="pt-14 w-full flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-2 md:mb-4">
+                    <h2 class="text-lg md:text-2xl text-gray-700">Level 2: Maze</h2>
+                    <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Algorithm</span>
+                </div>
+
+                <!-- Mobile: Column (Maze atas, Controller bawah), Desktop: Row -->
+                <div class="flex flex-col md:flex-row gap-4 h-full">
+                    <!-- Area Maze -->
+                    <div class="bg-gray-800 p-2 md:p-4 rounded-xl border-b-8 border-gray-900 flex justify-center items-center flex-shrink-0">
+                        <div id="maze-grid" class="grid grid-cols-5 gap-1 bg-gray-700 p-1 rounded w-full max-w-[280px] aspect-square">
+                            <!-- Grid injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Area Controller -->
+                    <div class="w-full bg-gray-50 p-3 md:p-4 rounded-xl border-2 border-gray-200 flex flex-col">
+                        <h3 class="text-sm md:text-lg text-center mb-2 text-gray-600">Susun Program</h3>
+                        <div id="program-list" class="bg-white border-2 border-dashed border-gray-300 h-20 md:h-40 p-2 mb-2 rounded overflow-y-auto flex flex-wrap gap-2 content-start">
+                            <p class="text-gray-400 text-xs w-full text-center mt-2">Tombol di bawah</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2 mb-2 mt-auto">
+                            <button onclick="addCommand('maju')" class="btn-3d btn-blue py-3 rounded text-xl flex items-center justify-center"><i class="ph-bold ph-arrow-up"></i></button>
+                            <button onclick="addCommand('kiri')" class="btn-3d btn-yellow py-3 rounded text-xl flex items-center justify-center"><i class="ph-bold ph-arrow-counter-clockwise"></i></button>
+                            <button onclick="addCommand('kanan')" class="btn-3d btn-yellow py-3 rounded text-xl flex items-center justify-center"><i class="ph-bold ph-arrow-clockwise"></i></button>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="resetMaze()" class="flex-1 btn-3d btn-red py-2 rounded font-bold text-sm">RESET</button>
+                            <button onclick="runMaze()" class="flex-1 btn-3d btn-green py-2 rounded font-bold text-sm">JALANKAN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SCENE 4: GAME 3 (KAPTEN KEBERSIHAN) === -->
+        <div id="scene-game3" class="hidden-screen card-3d p-4 md:p-6 min-h-[85vh] md:min-h-[500px] relative overflow-hidden flex flex-col">
+            <button onclick="goHome()" class="btn-3d btn-gray home-btn"><i class="ph-bold ph-house"></i> Home</button>
+            <div class="pt-14 w-full flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg md:text-2xl text-gray-700">Level 3: Kebersihan</h2>
+                    <div class="bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold flex items-center gap-2 text-sm">
+                        <i class="ph-fill ph-clock"></i> <span id="timer-clean">30</span>s
+                    </div>
+                </div>
+
+                <div class="text-center mb-2 text-gray-600 text-xs md:text-sm">
+                    <p>Klik Siswa lalu Klik Tugas (Dekomposisi)!</p>
+                </div>
+
+                <!-- Grid Tugas: 1 kolom di HP agar tidak sempit -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-8 flex-1 overflow-y-auto">
+                    <!-- Task 1: Sapu -->
+                    <div onclick="assignTask(0)" class="task-area bg-orange-50 border-2 border-orange-200 rounded-xl p-3 cursor-pointer hover:bg-orange-100 transition relative flex items-center justify-between md:flex-col md:text-center md:justify-center">
+                        <div class="flex items-center gap-3 md:block">
+                            <div class="text-3xl md:text-4xl md:mb-2">🧹</div>
+                            <h3 class="text-orange-800 font-bold text-sm md:text-base">Menyapu</h3>
+                        </div>
+                        <div class="w-32 md:w-full bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
+                            <div id="prog-0" class="bg-green-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div id="workers-0" class="absolute top-1 right-1 md:-top-2 md:-right-2 flex gap-1"></div>
+                    </div>
+
+                    <!-- Task 2: Papan -->
+                    <div onclick="assignTask(1)" class="task-area bg-blue-50 border-2 border-blue-200 rounded-xl p-3 cursor-pointer hover:bg-blue-100 transition relative flex items-center justify-between md:flex-col md:text-center md:justify-center">
+                        <div class="flex items-center gap-3 md:block">
+                            <div class="text-3xl md:text-4xl md:mb-2">🧽</div>
+                            <h3 class="text-blue-800 font-bold text-sm md:text-base">Papan</h3>
+                        </div>
+                        <div class="w-32 md:w-full bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
+                            <div id="prog-1" class="bg-green-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div id="workers-1" class="absolute top-1 right-1 md:-top-2 md:-right-2 flex gap-1"></div>
+                    </div>
+
+                    <!-- Task 3: Kaca -->
+                    <div onclick="assignTask(2)" class="task-area bg-cyan-50 border-2 border-cyan-200 rounded-xl p-3 cursor-pointer hover:bg-cyan-100 transition relative flex items-center justify-between md:flex-col md:text-center md:justify-center">
+                        <div class="flex items-center gap-3 md:block">
+                            <div class="text-3xl md:text-4xl md:mb-2">🪟</div>
+                            <h3 class="text-cyan-800 font-bold text-sm md:text-base">Kaca</h3>
+                        </div>
+                        <div class="w-32 md:w-full bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
+                            <div id="prog-2" class="bg-green-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div id="workers-2" class="absolute top-1 right-1 md:-top-2 md:-right-2 flex gap-1"></div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-2 md:p-3 rounded-xl border-t-4 border-gray-200 sticky bottom-0">
+                    <p class="text-center font-bold text-gray-500 mb-1 text-xs md:text-sm">Siswa Menganggur:</p>
+                    <div id="student-pool" class="flex justify-center gap-3 md:gap-4 pb-1">
+                        <!-- Students injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SCENE 5: GAME 4 (SORTIR PUSTAKA) === -->
+        <div id="scene-game4" class="hidden-screen card-3d p-4 md:p-6 min-h-[85vh] md:min-h-[500px] flex flex-col items-center relative">
+            <button onclick="goHome()" class="btn-3d btn-gray home-btn"><i class="ph-bold ph-house"></i> Home</button>
+            <div class="pt-14 w-full flex flex-col items-center flex-1">
+                <div class="w-full flex justify-between items-center mb-4">
+                    <h2 class="text-lg md:text-2xl text-gray-700">Level 4: Sortir</h2>
+                    <span class="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Abstraction</span>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 w-full mb-4 rounded">
+                    <p class="font-bold text-yellow-800 text-xs md:text-base">Misi: Cari buku SEJARAH PERANG</p>
+                    <p class="text-xs text-yellow-600 mt-1">Pilih PENTING (Kanan), Buang SAMPAH (Kiri)</p>
+                </div>
+
+                <div class="relative w-56 h-72 md:w-64 md:h-80 perspective-1000 mb-4 md:mb-8 flex-shrink-0">
+                    <div id="sort-card" class="w-full h-full bg-white rounded-2xl border-4 border-gray-800 shadow-2xl flex flex-col items-center justify-center p-4 md:p-6 text-center transition-transform duration-300 transform hover:scale-105">
+                        <div id="card-icon" class="text-5xl md:text-6xl mb-4">📚</div>
+                        <h3 id="card-text" class="text-xl md:text-2xl font-bold text-gray-800">Judul Buku</h3>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 w-full max-w-md mt-auto mb-4">
+                    <button onclick="handleSort(false)" class="flex-1 btn-3d btn-red py-3 md:py-4 rounded-xl text-lg md:text-xl font-bold flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash"></i> <span class="text-sm md:text-lg">BUANG</span>
+                    </button>
+                    <button onclick="handleSort(true)" class="flex-1 btn-3d btn-green py-3 md:py-4 rounded-xl text-lg md:text-xl font-bold flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-check-circle"></i> <span class="text-sm md:text-lg">SIMPAN</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SCENE 6: GAME 5 (ESCAPE ROOM) === -->
+        <div id="scene-game5" class="hidden-screen card-3d overflow-hidden min-h-[85vh] md:min-h-[500px] relative bg-gray-900 text-white flex flex-col">
+            <button onclick="goHome()" class="btn-3d btn-gray home-btn border-none bg-gray-800 text-white"><i class="ph-bold ph-house"></i> Home</button>
+            <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, #444 2px, transparent 2px); background-size: 20px 20px;"></div>
+            
+            <div class="p-4 md:p-6 relative z-10 h-full flex-1 flex flex-col pt-16">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg md:text-2xl text-white">Level 5: Escape</h2>
+                    <span class="bg-gray-700 px-3 py-1 rounded-full text-xs md:text-sm font-bold border border-gray-500">Kriptografi</span>
+                </div>
+
+                <div class="flex-1 relative border-4 border-gray-700 rounded-xl bg-gray-800/50 shadow-inner w-full min-h-[250px]">
+                    <!-- Lukisan -->
+                    <div onclick="inspectItem('lukisan')" class="absolute top-6 left-4 md:top-10 md:left-10 w-16 h-24 md:w-24 md:h-32 bg-yellow-900 border-4 border-yellow-600 rounded cursor-pointer hover:brightness-110 transition shadow-lg transform rotate-2">
+                        <div class="w-full h-full bg-yellow-800 flex items-center justify-center text-2xl md:text-4xl">🖼️</div>
+                        <p class="text-[10px] text-center mt-1 bg-black/50 rounded text-white w-full absolute bottom-0">Klik</p>
+                    </div>
+
+                    <!-- Kertas -->
+                    <div onclick="inspectItem('kertas')" class="absolute bottom-6 left-1/2 w-10 h-14 md:w-16 md:h-20 bg-white text-gray-800 rounded shadow-lg cursor-pointer transform -translate-x-1/2 rotate-12 flex items-center justify-center hover:-translate-y-2 transition">
+                        <i class="ph-bold ph-note text-xl md:text-3xl"></i>
+                    </div>
+
+                    <!-- Pintu -->
+                    <div onclick="inspectItem('pintu')" class="absolute top-1/2 right-4 md:right-10 w-20 h-32 md:w-32 md:h-48 bg-gray-600 border-8 border-gray-500 rounded-t-full transform -translate-y-1/2 cursor-pointer hover:bg-gray-500 transition shadow-2xl flex flex-col items-center justify-center">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <i class="ph-fill ph-lock-key text-3xl md:text-5xl text-red-500" id="door-lock-icon"></i>
+                        </div>
+                        <div class="bg-black px-2 py-1 rounded text-red-500 font-mono text-[10px] md:text-xs mb-2 md:mb-4">LOCKED</div>
+                    </div>
+                </div>
+
+                <div id="game-message" class="mt-4 bg-black/80 p-3 rounded text-center text-green-400 font-mono min-h-[50px] text-xs md:text-base">
+                    "Pintu terkunci. Cari petunjuk di ruangan!"
+                </div>
+            </div>
+
+            <!-- Modal Overlay for Keypad -->
+            <div id="keypad-modal" class="absolute inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+                <div class="bg-gray-800 p-6 rounded-2xl border-2 border-gray-600 w-full max-w-xs text-center">
+                    <h3 class="text-lg md:text-xl mb-4 text-green-400 font-mono">INPUT PASSCODE</h3>
+                    <input type="text" id="escape-input" class="w-full bg-black text-green-500 text-center text-2xl font-mono p-2 border border-green-700 rounded mb-4 uppercase" placeholder="_ _ _ _ _" maxlength="5">
+                    <div class="flex gap-2">
+                        <button onclick="closeKeypad()" class="flex-1 bg-red-600 p-2 rounded text-white font-bold">BATAL</button>
+                        <button onclick="checkCode()" class="flex-1 bg-green-600 p-2 rounded text-white font-bold">ENTER</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SCENE 7: ENDING === -->
+        <div id="scene-ending" class="hidden-screen card-3d p-6 md:p-8 text-center bg-gradient-to-b from-yellow-50 to-white min-h-[85vh] md:min-h-[600px] flex flex-col justify-center items-center">
+            <div class="text-7xl md:text-8xl mb-4 animate-bounce">🏆</div>
+            <h1 class="text-3xl md:text-4xl text-yellow-600 mb-2">SELAMAT!</h1>
+            <h2 class="text-lg md:text-2xl text-gray-700 mb-6">Misi Selesai!</h2>
+            
+            <h3 class="text-2xl md:text-3xl text-indigo-600 mb-2 font-bold game-font">Total Skor: <span id="final-score" class="text-4xl md:text-5xl">0</span></h3>
+            <p class="text-xs md:text-sm text-gray-400 mb-8">Skor telah disimpan ke Peringkat Global</p>
+            
+            <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                <button onclick="openLeaderboard()" class="btn-3d btn-yellow py-3 px-6 rounded-full text-lg font-bold w-full">
+                    LIHAT PERINGKAT 📊
+                </button>
+                <button onclick="resetAndGoHome()" class="btn-3d btn-purple py-3 px-6 rounded-full text-lg font-bold w-full">
+                    MAIN LAGI 🔄
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL FEEDBACK (Global) -->
+        <div id="feedback-modal" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 text-center w-full max-w-sm transform transition-all scale-100 shadow-2xl border-4 border-white">
+                <div id="fb-icon" class="text-5xl md:text-6xl mb-2">✅</div>
+                <h3 id="fb-title" class="text-xl md:text-2xl font-bold mb-2">Benar!</h3>
+                <p id="fb-text" class="text-gray-600 mb-6 text-sm md:text-base">Kamu hebat sekali.</p>
+                <button onclick="closeFeedback()" class="btn-3d btn-blue px-6 py-3 rounded-lg w-full font-bold">LANJUT</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC (MODULE TYPE UNTUK FIREBASE) -->
+    <script type="module">
+        // --- 1. FIREBASE CONFIG & INIT ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, doc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth, appId;
+        let useLocalStorage = false;
+        let currentUser = null;
+        let playerName = "";
+
+        // Check environment (Cloud vs Local)
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                signInAnonymously(auth).then((userCredential) => {
+                    currentUser = userCredential.user;
+                    console.log("Logged in as:", currentUser.uid);
+                }).catch((error) => {
+                    console.error("Auth Error:", error);
+                    useLocalStorage = true;
+                });
+            } else {
+                throw new Error("No config found");
+            }
+        } catch (e) {
+            console.warn("Running in Local Mode (Offline). Leaderboard will use LocalStorage.");
+            useLocalStorage = true;
+        }
+
+        // --- 2. GLOBAL STATE ---
+        let currentScene = 0;
+        let totalScore = 0;
+        const scenes = ['scene-opening', 'scene-leaderboard', 'scene-game1', 'scene-game2', 'scene-game3', 'scene-game4', 'scene-game5', 'scene-ending'];
+        
+        // --- 3. EXPOSE FUNCTIONS TO WINDOW ---
+        window.playSound = (type) => {
+            console.log(`Playing Sound: ${type}`);
+        };
+
+        window.switchScene = (sceneId) => {
+            scenes.forEach(id => document.getElementById(id).classList.add('hidden-screen'));
+            document.getElementById(sceneId).classList.remove('hidden-screen');
+            window.scrollTo(0,0);
+
+            // Manage Score HUD Visibility
+            const scoreHud = document.getElementById('score-hud');
+            if (sceneId === 'scene-opening' || sceneId === 'scene-ending' || sceneId === 'scene-leaderboard') {
+                scoreHud.style.display = 'none';
+            } else {
+                scoreHud.style.display = 'block';
+            }
+        };
+
+        window.updateScore = (amount) => {
+            totalScore += amount;
+            document.getElementById('score-val').innerText = totalScore;
+            document.getElementById('final-score').innerText = totalScore;
+        };
+
+        window.goHome = () => {
+            if(window.g3Interval) clearInterval(window.g3Interval);
+            window.switchScene('scene-opening');
+            
+            if(playerName) {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('menu-section').classList.remove('hidden');
+            } else {
+                document.getElementById('login-section').classList.remove('hidden');
+                document.getElementById('menu-section').classList.add('hidden');
+            }
+        };
+
+        window.resetAndGoHome = () => {
+            totalScore = 0;
+            document.getElementById('score-val').innerText = totalScore;
+            window.goHome();
+        };
+        
+        // --- Submit Name Function ---
+        window.submitName = () => {
+            const nameInput = document.getElementById('player-name-input');
+            const name = nameInput.value.trim();
+            
+            if(name === "") {
+                document.getElementById('start-hint').classList.remove('hidden');
+                window.playSound('fail');
+                nameInput.focus();
+                return;
+            }
+            
+            playerName = name;
+            document.getElementById('hud-name').innerText = playerName;
+            document.getElementById('display-player-name').innerText = playerName;
+            document.getElementById('start-hint').classList.add('hidden');
+            
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('menu-section').classList.remove('hidden');
+            
+            window.playSound('win');
+        };
+
+        window.logout = () => {
+             playerName = "";
+             document.getElementById('player-name-input').value = "";
+             window.resetAndGoHome();
+        };
+
+        window.startLevel = (level) => {
+            window.playSound('click');
+            if(level === 1) { window.initGame1(); window.switchScene('scene-game1'); }
+            if(level === 2) { window.initGame2(); window.switchScene('scene-game2'); }
+            if(level === 3) { window.initGame3(); window.switchScene('scene-game3'); }
+            if(level === 4) { window.initGame4(); window.switchScene('scene-game4'); }
+            if(level === 5) { window.switchScene('scene-game5'); }
+        };
+
+        window.showFeedback = (success, title, message, nextCallback) => {
+            const modal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('fb-icon');
+            const tit = document.getElementById('fb-title');
+            const txt = document.getElementById('fb-text');
+            const btn = modal.querySelector('button');
+
+            modal.style.display = 'flex';
+            if(success) {
+                icon.innerHTML = '🌟';
+                tit.className = 'text-2xl font-bold mb-2 text-green-600';
+                tit.innerText = title || "Hebat!";
+                window.playSound('win');
+            } else {
+                icon.innerHTML = '💥';
+                tit.className = 'text-2xl font-bold mb-2 text-red-600';
+                tit.innerText = title || "Ups, Salah!";
+                window.playSound('fail');
+            }
+            txt.innerText = message;
+
+            btn.onclick = () => {
+                modal.style.display = 'none';
+                if(nextCallback) nextCallback();
+            };
+        };
+
+        window.closeFeedback = () => {
+            document.getElementById('feedback-modal').style.display = 'none';
+        };
+
+        // --- 4. GAME LOGIC ---
+
+        // ================= GAME 1: MAGMA JUMP =================
+        let g1Step = 0;
+        const g1Levels = [
+            { seq: [3, 5, 7], ans: 9, opts: [11, 9, 10], rule: "+2 (Ganjil)" },
+            { seq: [10, 20, 30], ans: 40, opts: [35, 40, 50], rule: "+10" },
+            { seq: [1, 2, 4], ans: 8, opts: [6, 8, 7], rule: "x2 (Kali dua)" }
+        ];
+
+        window.initGame1 = () => {
+            g1Step = 0;
+            window.renderGame1();
+        }
+
+        window.renderGame1 = () => {
+            if(g1Step >= g1Levels.length) {
+                window.showFeedback(true, "Level Selesai!", "Kamu berhasil menyelesaikan semua pola!", () => {
+                    window.goHome();
+                });
+                return;
+            }
+
+            const data = g1Levels[g1Step];
+            const stoneCont = document.getElementById('stones-container');
+            const optsCont = document.getElementById('pattern-options');
+            
+            stoneCont.innerHTML = '';
+            data.seq.forEach(num => {
+                stoneCont.innerHTML += `<div class="w-12 h-10 md:w-16 md:h-12 bg-gray-600 rounded-t-lg flex-shrink-0 flex items-center justify-center text-white font-bold border-b-4 border-black relative top-8 mx-1">${num}</div>`;
+            });
+            stoneCont.innerHTML += `<div class="w-12 h-10 md:w-16 md:h-12 bg-gray-400 rounded-t-lg flex-shrink-0 flex items-center justify-center text-white font-bold border-b-4 border-gray-600 animate-pulse relative top-8 mx-1">?</div>`;
+            document.getElementById('pattern-question').innerText = `Pola: Angka selanjutnya?`;
+            optsCont.innerHTML = '';
+            data.opts.forEach(opt => {
+                optsCont.innerHTML += `<button onclick="checkGame1(${opt})" class="btn-3d btn-blue w-12 h-12 md:w-16 md:h-16 rounded-lg text-lg md:text-xl font-bold">${opt}</button>`;
+            });
+            const char = document.getElementById('player-char');
+            char.style.left = '40px';
+        }
+
+        window.checkGame1 = (ans) => {
+            const data = g1Levels[g1Step];
+            if(ans === data.ans) {
+                window.updateScore(30);
+                const char = document.getElementById('player-char');
+                char.style.left = '75%';
+                setTimeout(() => {
+                    window.showFeedback(true, "Benar! (+30 Poin)", `Polanya adalah: ${data.rule}`, () => {
+                        g1Step++;
+                        window.renderGame1();
+                    });
+                }, 500);
+            } else {
+                window.showFeedback(false, "Terjatuh!", "Awas panas! Coba hitung lagi.", null);
+            }
+        }
+
+        // ================= GAME 2: BOT MAZE =================
+        const mazeLayout = [
+            0, 0, 1, 0, 2, 
+            0, 1, 1, 0, 0,
+            0, 0, 0, 0, 0,
+            1, 1, 1, 1, 0,
+            3, 0, 0, 0, 0
+        ];
+        let botPos = 20; 
+        let botDir = 0; 
+        let commands = [];
+
+        window.initGame2 = () => {
+            window.resetMaze();
+        }
+
+        window.renderMaze = () => {
+            const grid = document.getElementById('maze-grid');
+            grid.innerHTML = '';
+            mazeLayout.forEach((cell, idx) => {
+                let content = '';
+                let bgClass = 'bg-gray-100';
+                if(cell === 1) bgClass = 'bg-gray-800 border-gray-600'; 
+                if(cell === 2) content = '🔋'; 
+                if(idx === botPos) {
+                    const rot = botDir * 90;
+                    content = `<div class="robot" style="transform: rotate(${rot}deg)">🤖</div>`;
+                }
+                grid.innerHTML += `<div class="grid-cell ${bgClass}">${content}</div>`;
+            });
+        }
+
+        window.addCommand = (cmd) => {
+            if(commands.length < 8) {
+                commands.push(cmd);
+                window.updateCommandUI();
+            }
+        }
+
+        window.updateCommandUI = () => {
+            const list = document.getElementById('program-list');
+            if(commands.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-xs w-full text-center mt-2">Tombol di bawah</p>';
+                return;
+            }
+            list.innerHTML = '';
+            commands.forEach((cmd, i) => {
+                let icon = '';
+                let color = '';
+                if(cmd === 'maju') { icon = 'ph-arrow-up'; color = 'bg-blue-100 text-blue-600'; }
+                if(cmd === 'kiri') { icon = 'ph-arrow-counter-clockwise'; color = 'bg-yellow-100 text-yellow-600'; }
+                if(cmd === 'kanan') { icon = 'ph-arrow-clockwise'; color = 'bg-yellow-100 text-yellow-600'; }
+                list.innerHTML += `<div class="px-2 py-1 ${color} rounded text-sm font-bold border border-gray-200 flex items-center gap-1"><i class="ph-bold ${icon}"></i> ${i+1}</div>`;
+            });
+        }
+
+        window.resetMaze = () => {
+            botPos = 20;
+            botDir = 0;
+            commands = [];
+            window.renderMaze();
+            window.updateCommandUI();
+        }
+
+        window.runMaze = async () => {
+            if(commands.length === 0) return;
+            for(let cmd of commands) {
+                await new Promise(r => setTimeout(r, 500)); 
+                if(cmd === 'kiri') botDir = (botDir === 0) ? 3 : botDir - 1;
+                else if(cmd === 'kanan') botDir = (botDir === 3) ? 0 : botDir + 1;
+                else if(cmd === 'maju') {
+                    let nextPos = botPos;
+                    if(botDir === 0 && botPos >= 5) nextPos -= 5; 
+                    if(botDir === 1 && (botPos+1)%5 !== 0) nextPos += 1; 
+                    if(botDir === 2 && botPos < 20) nextPos += 5; 
+                    if(botDir === 3 && botPos%5 !== 0) nextPos -= 1; 
+                    if(mazeLayout[nextPos] !== 1) { 
+                        botPos = nextPos;
+                    } else {
+                        const botEl = document.querySelector('.robot');
+                        botEl.innerText = '💥';
+                        await new Promise(r => setTimeout(r, 200));
+                    }
+                }
+                window.renderMaze();
+
+                if(mazeLayout[botPos] === 2) {
+                    setTimeout(() => {
+                        window.updateScore(100); 
+                        window.showFeedback(true, "Sukses! (+100 Poin)", "Algoritma sempurna!", () => {
+                             window.goHome();
+                        });
+                    }, 500);
+                    return;
+                }
+            }
+            if(mazeLayout[botPos] !== 2) {
+                window.showFeedback(false, "Bingung", "Baterai belum diambil. Reset!", null);
+            }
+        }
+
+        // ================= GAME 3: KAPTEN KEBERSIHAN =================
+        let tasks = [50, 50, 50]; 
+        let selectedStudent = null;
+        let workingStudents = {}; 
+        let students = [
+            {id:0, name:'A', icon:'👦'}, 
+            {id:1, name:'B', icon:'👧'}, 
+            {id:2, name:'C', icon:'🧑'}, 
+            {id:3, name:'D', icon:'👩'}
+        ]; 
+        window.g3Interval = null;
+
+        window.initGame3 = () => {
+            let g3TimerVal = 30;
+            tasks = [20, 20, 20]; 
+            workingStudents = {}; 
+            window.renderStudents();
+            window.startTimerG3(g3TimerVal);
+        }
+
+        window.startTimerG3 = (timerVal) => {
+            if(window.g3Interval) clearInterval(window.g3Interval);
+            document.getElementById('timer-clean').innerText = timerVal;
+            
+            window.g3Interval = setInterval(() => {
+                timerVal--;
+                document.getElementById('timer-clean').innerText = timerVal;
+                
+                tasks.forEach((val, i) => {
+                    if(val > 0 && val < 100) tasks[i] -= 1; 
+                });
+
+                for (let sId in workingStudents) {
+                    let tId = workingStudents[sId];
+                    if(tasks[tId] < 100) tasks[tId] += 3; 
+                    if(tasks[tId] > 100) tasks[tId] = 100;
+                }
+                window.updateTaskUI();
+
+                if(tasks.every(t => t >= 100)) {
+                    clearInterval(window.g3Interval);
+                    window.updateScore(100); 
+                    window.showFeedback(true, "Kinclong! (+100 Poin)", "Kerja bagus!", () => {
+                        window.goHome();
+                    });
+                }
+                if(timerVal <= 0) {
+                    clearInterval(window.g3Interval);
+                    window.showFeedback(false, "Waktu Habis!", "Coba lagi!", () => {
+                        window.initGame3(); 
+                    });
+                }
+            }, 500); 
+        }
+
+        window.renderStudents = () => {
+            const pool = document.getElementById('student-pool');
+            pool.innerHTML = '';
+            students.forEach(s => {
+                if(!workingStudents.hasOwnProperty(s.id)) {
+                    let activeClass = (selectedStudent === s.id) ? 'border-blue-500 bg-blue-100 scale-110' : 'border-gray-300 bg-white';
+                    pool.innerHTML += `<div onclick="selectStudent(${s.id})" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 ${activeClass} flex items-center justify-center text-xl md:text-2xl cursor-pointer transition transform hover:scale-105">${s.icon}</div>`;
+                }
+            });
+        }
+
+        window.selectStudent = (id) => {
+            selectedStudent = id;
+            window.renderStudents();
+        }
+
+        window.assignTask = (taskId) => {
+            if(selectedStudent !== null) {
+                workingStudents[selectedStudent] = taskId;
+                selectedStudent = null;
+                window.renderStudents();
+                window.updateTaskUI();
+            }
+        }
+
+        window.updateTaskUI = () => {
+            tasks.forEach((val, i) => {
+                document.getElementById(`prog-${i}`).style.width = val + '%';
+                const workerCont = document.getElementById(`workers-${i}`);
+                workerCont.innerHTML = '';
+                for(let sId in workingStudents) {
+                    if(workingStudents[sId] === i) {
+                        let s = students.find(st => st.id == sId);
+                        workerCont.innerHTML += `<div onclick="unassignStudent(${s.id})" class="text-xs bg-white border rounded-full p-1 cursor-pointer hover:bg-red-100" title="Klik untuk batal">${s.icon}</div>`;
+                    }
+                }
+            });
+        }
+
+        window.unassignStudent = (sId) => {
+            delete workingStudents[sId];
+            window.renderStudents();
+            window.updateTaskUI();
+        }
+
+        // ================= GAME 4: SORTIR DATA =================
+        const cardsData = [
+            { text: "Warna Sampul", type: "junk" },
+            { text: "Judul Buku", type: "keep" },
+            { text: "Jumlah Halaman", type: "junk" },
+            { text: "Nomor Rak", type: "keep" },
+            { text: "Nama Penulis", type: "keep" },
+        ];
+        let g4Index = 0;
+
+        window.initGame4 = () => {
+            g4Index = 0;
+            window.renderCard();
+        }
+
+        window.renderCard = () => {
+            if(g4Index >= cardsData.length) {
+                window.showFeedback(true, "Selesai!", "Data tersortir.", () => {
+                    window.goHome();
+                });
+                return;
+            }
+            const data = cardsData[g4Index];
+            document.getElementById('card-text').innerText = data.text;
+            const card = document.getElementById('sort-card');
+            card.className = "w-full h-full bg-white rounded-2xl border-4 border-gray-800 shadow-2xl flex flex-col items-center justify-center p-4 md:p-6 text-center transition-transform duration-300 transform hover:scale-105";
+        }
+
+        window.handleSort = (keep) => {
+            const data = cardsData[g4Index];
+            const isCorrect = (keep && data.type === 'keep') || (!keep && data.type === 'junk');
+            const card = document.getElementById('sort-card');
+
+            if(isCorrect) {
+                window.updateScore(20);
+                card.style.transform = keep ? 'translateX(200px) rotate(20deg)' : 'translateX(-200px) rotate(-20deg)';
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    g4Index++;
+                    window.renderCard();
+                    card.style.transform = 'scale(0)';
+                    card.style.opacity = '1';
+                    setTimeout(() => card.style.transform = 'scale(1)', 100);
+                }, 300);
+            } else {
+                card.style.borderColor = '#ef4444';
+                window.playSound('fail');
+                setTimeout(() => card.style.borderColor = '#1f2937', 500);
+                let msg = keep ? "Sampah!" : "Penting!";
+                document.getElementById('card-text').innerText = msg;
+                setTimeout(() => document.getElementById('card-text').innerText = data.text, 1000);
+            }
+        }
+
+        // ================= GAME 5: ESCAPE ROOM =================
+        let hasClue1 = false;
+        let hasClue2 = false;
+
+        window.inspectItem = (item) => {
+            const msg = document.getElementById('game-message');
+            
+            if(item === 'lukisan') {
+                hasClue1 = true;
+                msg.innerText = "Lukisan: 'KUNCI = A jadi B'";
+                msg.classList.add('text-yellow-300');
+            } else if (item === 'kertas') {
+                hasClue2 = true;
+                msg.innerText = "Kertas Sandi: 'K - F - M - B - T'";
+                msg.classList.add('text-yellow-300');
+            } else if (item === 'pintu') {
+                if(hasClue1 && hasClue2) {
+                    document.getElementById('keypad-modal').classList.remove('hidden');
+                    document.getElementById('keypad-modal').classList.add('flex');
+                    document.getElementById('escape-input').value = '';
+                    document.getElementById('escape-input').focus();
+                } else {
+                    msg.innerText = "Cari petunjuk dulu!";
+                    msg.classList.remove('text-yellow-300');
+                    msg.classList.add('text-red-400');
+                }
+            }
+        }
+
+        window.closeKeypad = () => {
+            document.getElementById('keypad-modal').classList.add('hidden');
+            document.getElementById('keypad-modal').classList.remove('flex');
+        }
+
+        window.checkCode = () => {
+            const val = document.getElementById('escape-input').value.toUpperCase();
+            if(val === 'JELAS') {
+                window.closeKeypad();
+                window.updateScore(100); 
+                document.getElementById('door-lock-icon').className = "ph-fill ph-lock-key-open text-3xl md:text-5xl text-green-500";
+                window.playSound('win');
+                setTimeout(() => {
+                    saveScoreToLeaderboard();
+                    window.switchScene('scene-ending');
+                }, 1000);
+            } else {
+                document.getElementById('escape-input').classList.add('bg-red-900');
+                setTimeout(() => document.getElementById('escape-input').classList.remove('bg-red-900'), 500);
+            }
+        }
+
+        // --- LEADERBOARD LOGIC ---
+        async function saveScoreToLeaderboard() {
+            if (!playerName) return;
+
+            if (useLocalStorage) {
+                try {
+                    let scores = JSON.parse(localStorage.getItem('kka_game_scores') || '[]');
+                    scores.push({
+                        name: playerName,
+                        score: totalScore,
+                        timestamp: new Date().toISOString()
+                    });
+                    localStorage.setItem('kka_game_scores', JSON.stringify(scores));
+                } catch (e) {
+                    console.error("Gagal simpan skor lokal:", e);
+                }
+                return;
+            }
+
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'scores'), {
+                    name: playerName,
+                    score: totalScore,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (e) {
+                console.error("Gagal simpan skor Firebase:", e);
+            }
+        }
+
+        window.openLeaderboard = async () => {
+            window.switchScene('scene-leaderboard');
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">Memuat data...</td></tr>';
+
+            const renderScores = (scores) => {
+                scores.sort((a, b) => b.score - a.score);
+                scores = scores.slice(0, 10);
+
+                list.innerHTML = '';
+                if(scores.length === 0) {
+                    list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada skor.</td></tr>';
+                    return;
+                }
+
+                scores.forEach((s, index) => {
+                    let rankClass = "bg-white";
+                    let rankIcon = `#${index + 1}`;
+                    if(index === 0) { rankClass = "bg-yellow-100 font-bold"; rankIcon = "🥇"; }
+                    if(index === 1) { rankClass = "bg-gray-100 font-bold"; rankIcon = "🥈"; }
+                    if(index === 2) { rankClass = "bg-orange-50 font-bold"; rankIcon = "🥉"; }
+
+                    list.innerHTML += `
+                        <tr class="border-b border-gray-100 ${rankClass}">
+                            <td class="p-3 text-center">${rankIcon}</td>
+                            <td class="p-3 truncate max-w-[120px]">${s.name}</td>
+                            <td class="p-3 text-right font-mono text-indigo-600 font-bold">${s.score}</td>
+                        </tr>
+                    `;
+                });
+            };
+
+            if (useLocalStorage) {
+                try {
+                    const scores = JSON.parse(localStorage.getItem('kka_game_scores') || '[]');
+                    renderScores(scores);
+                } catch(e) {
+                    list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400">Gagal memuat data lokal.</td></tr>';
+                }
+                return;
+            }
+
+            if (!currentUser) return;
+            try {
+                const q = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                onSnapshot(q, (snapshot) => {
+                    let scores = [];
+                    snapshot.forEach(doc => scores.push(doc.data()));
+                    renderScores(scores);
+                }, (error) => {
+                    list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400">Gagal memuat data online.</td></tr>';
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        const nameInp = document.getElementById('player-name-input');
+        nameInp.addEventListener('input', (e) => {
+             document.getElementById('start-hint').classList.add('hidden');
+        });
+
+        // Init Scene
+        window.switchScene('scene-opening');
+
+    </script>
+</body>
+</html>
